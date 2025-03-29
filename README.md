@@ -1,5 +1,7 @@
 # shesh
 
+This is just a toy project, not a usable shell.
+
 ## Compilation
 
 This project is using [`nob.h`](https://github.com/tsoding/nob.h) (from [tsoding](https://github.com/tsoding)) for compiling.
@@ -29,3 +31,7 @@ Once compiled, you can run `shesh` using:
 
 > [!NOTE]
 > Using `./nob && ./shesh` can be useful to both compile and run.
+
+## Todos
+
+- [ ] Fix `cd`
