@@ -3,9 +3,13 @@
 #include "nob.h"
 
 int main(int argc, char *argv[]) {
-  nob_minimal_log_level = NOB_NO_LOGS;
   NOB_UNUSED(argc);
   NOB_UNUSED(argv);
+
+  // Disable logs so it doesn't interfere with command outputs
+  nob_minimal_log_level = NOB_NO_LOGS;
+
+  // Display prompt
   char hostname[1024];
   hostname[1023] = '\0';
   gethostname(hostname, 1023);
@@ -49,6 +53,7 @@ int main(int argc, char *argv[]) {
       ++i;
     }
   }
+  cmd.count = 0;
   free(curr);
   return EXIT_SUCCESS;
 }
