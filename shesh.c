@@ -3,9 +3,14 @@
 #include "nob.h"
 
 int main(int argc, char *argv[]) {
+  nob_minimal_log_level = NOB_NO_LOGS;
   NOB_UNUSED(argc);
   NOB_UNUSED(argv);
-  const char *prompt = "[carlitos@localhost]$ ";
+  char hostname[1024];
+  hostname[1023] = '\0';
+  gethostname(hostname, 1023);
+  const char *prompt = nob_temp_sprintf("[%s@%s %s]$ ", getlogin(), hostname,
+                                        nob_get_current_dir_temp());
   write(STDIN_FILENO, prompt, strlen(prompt));
 
   int i = 0;
