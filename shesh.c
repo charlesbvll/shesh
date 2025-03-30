@@ -1,6 +1,34 @@
 #include <stdio.h>
+
+#include <readline/history.h>
+#include <readline/readline.h>
 #define NOB_IMPLEMENTATION
 #include "nob.h"
+
+void append_space_sep_cmd(Nob_Cmd *cmd, const char *line, char *tmp) {
+  size_t total = 0;
+  size_t curr = 0;
+  bool space = false;
+  while (total < strlen(line)) {
+    if (line[total] != ' ') {
+      tmp[curr] = line[total];
+      total += 1;
+      curr += 1;
+    } else {
+      total += 1;
+      space = true;
+      tmp[curr] = '\0';
+      nob_cmd_append(cmd, nob_temp_sprintf("%s", tmp));
+      curr = 0;
+      memset(tmp, 0, 256);
+    }
+  }
+  tmp[curr] = '\0';
+  if (!space) {
+    strcpy(tmp, line);
+  }
+  nob_cmd_append(cmd, nob_temp_sprintf("%s", tmp));
+}
 
 int main(int argc, char *argv[]) {
   NOB_UNUSED(argc);
@@ -15,45 +43,20 @@ int main(int argc, char *argv[]) {
   gethostname(hostname, 1023);
   const char *prompt = nob_temp_sprintf("[%s@%s %s]$ ", getlogin(), hostname,
                                         nob_get_current_dir_temp());
-  write(STDIN_FILENO, prompt, strlen(prompt));
-
-  int i = 0;
-  char *curr = malloc(256);
-  char ch;
   Nob_Cmd cmd = {0};
-  while (read(STDIN_FILENO, &ch, 1) > 0) {
-    if (i > 255) {
+  char *tmp = malloc(256);
+  while (!feof(stdin)) {
+    const char *line = readline(prompt);
+    if (strcmp(line, "exit") == 0 || strcmp(line, "q") == 0) {
       break;
     }
-    if (ch == 'q') {
-      break;
-    }
-
-    if (ch == '\n') {
-      if (strcmp(curr, "exit") == 0) {
-        break;
-      }
-      nob_cmd_append(&cmd, nob_temp_sprintf("%s", curr));
-      nob_cmd_run_sync_redirect(cmd, (Nob_Cmd_Redirect){
-                                         .fdin = STDIN_FILENO,
-                                         .fdout = STDIN_FILENO,
-                                         .fderr = STDIN_FILENO,
-                                     });
-      cmd.count = 0;
-      write(STDIN_FILENO, "\n", 1);
-      write(STDIN_FILENO, prompt, strlen(prompt));
-      memset(curr, 0, 256);
-      i = 0;
-    } else if (ch == ' ') {
-      nob_cmd_append(&cmd, nob_temp_sprintf("%s", curr));
-      memset(curr, 0, 256);
-      i = 0;
-    } else {
-      curr[i] = ch;
-      ++i;
-    }
+    append_space_sep_cmd(&cmd, line, tmp);
+    nob_cmd_run_sync_redirect_and_reset(&cmd, (Nob_Cmd_Redirect){
+                                                  .fdin = STDIN_FILENO,
+                                                  .fdout = STDIN_FILENO,
+                                                  .fderr = STDIN_FILENO,
+                                              });
   }
-  cmd.count = 0;
-  free(curr);
+  free(tmp);
   return EXIT_SUCCESS;
 }
